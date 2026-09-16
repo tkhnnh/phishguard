@@ -21,6 +21,23 @@ PROTECTED_BRANDS = [
 
 IP_URL_PATTERN = re.compile(r"https?://\d{1,3}(\.\d{1,3}){3}")
 
+# Email service providers / newsletter platforms: links legitimately point here
+# even when the sender is a different domain, so don't flag these as mismatches.
+KNOWN_ESP_DOMAINS = {
+    "beehiiv.com",
+    "beehiivstatus.com",
+    "list-manage.com",     # Mailchimp
+    "mcusercontent.com",   # Mailchimp
+    "sendgrid.net",
+    "mailgun.org",
+    "rs6.net",             # Constant Contact
+    "substack.com",
+    "cmail19.com",         # Campaign Monitor (varies: cmailNN.com)
+    "hubspotlinks.com",
+    "klaviyomail.com",
+    "sparkpostmail.com",
+}
+
 def check_urgency(email: EmailIn) -> list[Signal]:
     signals = []
     text = (email.subject + " " + email.body_text).lower()
@@ -52,13 +69,14 @@ def check_domain_mismatch(email: EmailIn) -> list[Signal]:
     
     sender_domain = sender_domain_of(email.sender)
     
-    
     if not sender_domain or "." not in sender_domain:
         return []
     
     flagged = set() 
     for url in email.urls:
         link_domain = registered_domain(url)
+        if link_domain in KNOWN_ESP_DOMAINS:
+            continue
         if link_domain != sender_domain and link_domain not in flagged:
             flagged.add(link_domain)
             signals.append(Signal(
