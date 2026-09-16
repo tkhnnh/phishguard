@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.schemas import EmailIn, AnalyzeResponse
 from app.heuristics import (check_urgency, check_domain_mismatch, check_lookalike, check_ip_url, check_reply_to, check_url_entropy)
 from app.scoring import score_signal
-from app.reputation import (check_safe_browsing, check_domain_age)
+from app.reputation import (check_safe_browsing, check_domain_age, check_redirects)
 
 app = FastAPI()
 
@@ -24,4 +24,5 @@ async def analyze(payload: EmailIn):
         signals += rule(payload)
     signals += await check_safe_browsing(payload)
     signals += await check_domain_age(payload)
+    signals += await check_redirects(payload)
     return score_signal(signals)

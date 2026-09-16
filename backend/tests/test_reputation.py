@@ -1,7 +1,7 @@
 import httpx
 import respx
 from app.schemas import EmailIn
-from app.reputation import check_safe_browsing, check_domain_age,SAFE_BROWSING_URL, RDAP_URL
+from app.reputation import check_safe_browsing, check_domain_age,SAFE_BROWSING_URL, RDAP_URL, check_redirects
 from app.config import settings
 from datetime import datetime, timezone,timedelta
 
@@ -96,3 +96,28 @@ async def test_domain_degrades_registration_event_missing():
     )
     assert await check_domain_age(make_email(urls = ["registrationeventmissing.com"])) == []
     
+    
+@respx.mock
+async def test_redirects_fires_on_URL_redirects():
+    respx.head("http://bit.ly/x").mock(
+        return_value=httpx.Response(301, headers={"Location": "http://evil.com/login"})
+    )
+    respx.head("http://evil.com/login").mock(return_value=httpx.Response(200))
+    
+    signals = await check_redirects(make_email(urls=["http://bit.ly/x"]))
+    assert len(signals) == 1
+    assert all(s.code == "redirect" for s in signals)
+    
+@respx.mock
+async def test_redirects_silent():
+    respx.head("http://normal.com").mock(
+        return_value=httpx.Response(200)
+    )
+    assert await check_redirects(make_email(urls=["http://normal.com"])) == []
+    
+@respx.mock
+async def test_redirects_degrades_on_error():
+    respx.head("http://abnormal.com").mock(
+        side_effect=httpx.ConnectError("boom")
+    )
+    assert await check_redirects(make_email(urls=["http://abnormal.com"])) == []

@@ -86,3 +86,26 @@ async def check_domain_age(email: EmailIn) -> list[Signal]:
         except (httpx.HTTPError, httpx.TimeoutException, ValueError, KeyError):
             continue
     return signals
+
+async def check_redirects(email: EmailIn) -> list[Signal]:
+    signals = []
+    seen = set()
+    for url in email.urls:
+        if url in seen:
+            continue
+        seen.add(url)
+        try:
+            async with httpx.AsyncClient(timeout=5.0, follow_redirects=True) as client:
+                resp = await client.head(url, follow_redirects=True)
+            final_url = str(resp.url)
+            orig = registered_domain(url)
+            final = registered_domain(final_url)
+            if orig != final:
+                    signals.append(Signal(code="redirect",
+                    message=f"Link redirects from '{orig}' to '{final}'",
+                    weight=25, severity="medium"))
+           
+        except (httpx.HTTPError, httpx.TimeoutException):
+            continue
+    return signals
+
