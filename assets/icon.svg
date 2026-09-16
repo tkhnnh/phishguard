@@ -1,0 +1,30 @@
+<svg width="128" height="128" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="PhishGuard icon">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="128" y2="128" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#0b1220"/>
+      <stop offset="1" stop-color="#122036"/>
+    </linearGradient>
+    <linearGradient id="shield" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#2dd4bf"/>
+      <stop offset="1" stop-color="#0ea5a4"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Rounded square background -->
+  <rect width="128" height="128" rx="28" fill="url(#bg)"/>
+
+  <!-- Shield -->
+  <g transform="translate(28,20)">
+    <path d="M36 4 L68 16 V46 C68 66 55 78 36 84 C17 78 4 66 4 46 V16 Z"
+          fill="url(#shield)"/>
+    <path d="M36 4 L68 16 V46 C68 66 55 78 36 84 C17 78 4 66 4 46 V16 Z"
+          fill="none" stroke="#7ff3e6" stroke-opacity="0.4" stroke-width="1.5"/>
+
+    <!-- Envelope + check -->
+    <g transform="translate(13,26)">
+      <rect x="0" y="0" width="46" height="32" rx="4" fill="#0b1220"/>
+      <path d="M3 5 L23 20 L43 5" fill="none" stroke="#2dd4bf" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M14 22 L21 29 L34 15" fill="none" stroke="#38bdf8" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/>
+    </g>
+  </g>
+</svg>
