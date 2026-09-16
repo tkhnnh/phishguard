@@ -10,6 +10,7 @@
   },
   "permissions": ["activeTab"],
   "host_permissions": [
+    "https://phishguard-klvp.onrender.com/*",
     "http://localhost:8000/*"
   ],
   "content_scripts": [

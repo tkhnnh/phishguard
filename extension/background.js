@@ -1,6 +1,7 @@
 console.log("PhishGuard background loaded");
 
-const BACKEND_URL = "http://localhost:8000/analyze";
+// Live backend (Render). For local development, swap to "http://localhost:8000/analyze".
+const BACKEND_URL = "https://phishguard-klvp.onrender.com/analyze";
 
 // The background service worker is the extension's privileged "hub". Content
 // scripts (which run inside Gmail) send it messages; it makes the network call
