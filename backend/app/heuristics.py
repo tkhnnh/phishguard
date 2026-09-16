@@ -2,6 +2,8 @@ from app.schemas import EmailIn, Signal
 import tldextract
 import difflib
 import re
+import math
+from collections import Counter
 
 URGENCY_PHRASES = [
     "verify your account",
@@ -24,7 +26,7 @@ def check_urgency(email: EmailIn) -> list[Signal]:
     text = (email.subject + " " + email.body_text).lower()
     for phrase in URGENCY_PHRASES:
         if phrase in text:
-            signals.append(Signal(code="urgency",message=f"Urgent-action language: '{phrase}'",weight=20, severity="medium"))
+            signals.append(Signal(code="urgency",message=f"Urgent-action language: '{phrase}'",weight=20, severity="medium",))
     
     return signals   
 
@@ -93,7 +95,7 @@ def check_ip_url(email: EmailIn)-> list[Signal]:
     signals = []
     for url in email.urls:
         if IP_URL_PATTERN.search(url):
-            signals.append(Signal(code="ip_url", message=f"Link uses a raw IP address instead of a domain: {url}", weight=30, severity="high"))
+            signals.append(Signal(code="ip_url", message=f"Link uses a raw IP address instead of a domain: {url}", weight=30, severity="high",))
     
     return signals
 
@@ -110,4 +112,25 @@ def check_reply_to(email:EmailIn) -> list[Signal]:
             severity="medium",
         ))
         
+    return signals
+
+
+# Entropy = the average number of bits needed to describe the next character of the string
+def shannon_entropy(text: str) -> float:
+    if not text:
+        return 0.0
+    counts = Counter(text)
+    length = len(text)
+    return -sum(
+        (c/length) * math.log2(c/ length)
+        for c in counts.values()
+    )
+    
+def check_url_entropy(email: EmailIn) -> list[Signal]:
+    signals = []
+    for url in email.urls:
+        domain = registered_domain(url)
+        entropy = shannon_entropy(domain)
+        if entropy > 3.5:
+            signals.append(Signal(code="high_entropy", message=f"Link domain '{domain}' looks random (entropy {entropy:.2f})", weight=15,severity="low",))    
     return signals

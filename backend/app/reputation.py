@@ -1,8 +1,12 @@
 import httpx
 from app.schemas import EmailIn, Signal
 from app.config import settings
+from datetime import datetime, timezone
+from app.heuristics import registered_domain
 
 SAFE_BROWSING_URL = "https://safebrowsing.googleapis.com/v4/threatMatches:find"
+
+RDAP_URL = "https://rdap.org/domain/"
 
 async def check_safe_browsing(email: EmailIn) -> list[Signal]:
     if not email.urls:
@@ -53,3 +57,32 @@ async def check_safe_browsing(email: EmailIn) -> list[Signal]:
     
     return signals
         
+async def check_domain_age(email: EmailIn) -> list[Signal]:
+    signals = []
+    seen = set()
+    for url in email.urls:
+        domain = registered_domain(url)
+        if not domain or domain in seen:
+            continue
+        seen.add(domain)
+        try:
+            async with httpx.AsyncClient(timeout=5.0, follow_redirects=True) as client:
+                resp = await client.get(RDAP_URL + domain)
+            resp.raise_for_status()
+            data = resp.json()
+            events = data.get("events", [])
+            if not events:
+                continue
+            for event in events:
+                if event.get("eventAction") == "registration":
+                    event_date = event.get("eventDate")
+                    reformat_event_date = datetime.fromisoformat(event_date.replace("Z", "+00:00"))
+                    age_days = (datetime.now(timezone.utc) - reformat_event_date).days
+                    if age_days < 30:
+                        signals.append(Signal(code="new_domain",
+                    message=f"Domain '{domain}' registered {age_days} days ago",
+                    weight=30, severity="high",))
+                    
+        except (httpx.HTTPError, httpx.TimeoutException, ValueError, KeyError):
+            continue
+    return signals

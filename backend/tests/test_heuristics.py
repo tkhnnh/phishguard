@@ -1,5 +1,5 @@
 from app.schemas import EmailIn
-from app.heuristics import (check_urgency, check_domain_mismatch, check_lookalike, check_ip_url, check_reply_to)
+from app.heuristics import (check_urgency, check_domain_mismatch, check_lookalike, check_ip_url, check_reply_to, check_url_entropy)
 
 def make_email(**kwargs) -> EmailIn:
     """Helper: build an EmailIn with sensible defaults, override per test."""
@@ -71,3 +71,13 @@ def test_reply_on_clean_email():
 def test_reply_silent_when_no_reply_to():
     email = make_email(sender="abc@gmail.com")
     assert check_reply_to(email) == []
+    
+def test_url_entropy_fires_on_improper_domain():
+    email = make_email(urls = ["x7f9q2zk8bv.com"])
+    signals = check_url_entropy(email)
+    assert len(signals) == 1
+    assert all(s.code == "high_entropy" for s in signals)
+    
+def test_url_entropy_on_proper_domain():
+    email = make_email(urls = ["paypal.com"])
+    assert check_url_entropy(email) == []
