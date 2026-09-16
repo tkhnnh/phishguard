@@ -1,11 +1,18 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware 
-from app.schemas import EmailIn, AnalyzeResponse
+from app.schemas import (EmailIn, AnalyzeResponse)
 from app.heuristics import (check_urgency, check_domain_mismatch, check_lookalike, check_ip_url, check_reply_to, check_url_entropy)
 from app.scoring import score_signal
 from app.reputation import (check_safe_browsing, check_domain_age, check_redirects)
+from app.feeds import (check_blocklist, load_feeds)
+from contextlib import asynccontextmanager
 
-app = FastAPI()
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    await load_feeds()
+    yield
+
+app = FastAPI(lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
@@ -14,7 +21,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-RULES = [check_urgency, check_domain_mismatch, check_lookalike, check_ip_url, check_reply_to, check_url_entropy]
+RULES = [check_urgency, check_domain_mismatch, check_lookalike, check_ip_url, check_reply_to, check_url_entropy, check_blocklist]
 
 @app.post("/analyze", response_model = AnalyzeResponse)
 async def analyze(payload: EmailIn):

@@ -1,4 +1,4 @@
-from app.schemas import Signal, AnalyzeResponse
+from app.schemas import (Signal, AnalyzeResponse)
 
 def score_signal(signals: list[Signal]) -> AnalyzeResponse:
     total = sum(s.weight for s in signals)

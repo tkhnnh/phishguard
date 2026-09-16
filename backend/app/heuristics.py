@@ -1,4 +1,4 @@
-from app.schemas import EmailIn, Signal
+from app.schemas import (EmailIn, Signal)
 import tldextract
 import difflib
 import re

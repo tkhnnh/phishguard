@@ -1,5 +1,5 @@
-from app.schemas import Signal, AnalyzeResponse
-from app.scoring import score_signal
+from app.schemas import (Signal, AnalyzeResponse)
+from app.scoring import (score_signal)
 
 def sig(weight):
     """Helper: to build a signature with cusomizable weight"""

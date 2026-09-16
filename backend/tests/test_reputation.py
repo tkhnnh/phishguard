@@ -1,14 +1,11 @@
 import httpx
 import respx
 from app.schemas import EmailIn
-from app.reputation import check_safe_browsing, check_domain_age,SAFE_BROWSING_URL, RDAP_URL, check_redirects
+from app.reputation import (check_safe_browsing, check_domain_age,SAFE_BROWSING_URL, RDAP_URL, check_redirects)
 from app.config import settings
-from datetime import datetime, timezone,timedelta
+from datetime import (datetime, timezone,timedelta)
+from tests.test_heuristics import make_email
 
-def make_email(**kwargs) -> EmailIn:
-    defaults = {"sender": "a@example.com", "subject": "", "body_text": "", "urls": []}
-    defaults.update(kwargs)
-    return EmailIn(**defaults)
 
 
 async def test_safe_browsing_skips_when_no_urls():

@@ -1,7 +1,7 @@
 import httpx
-from app.schemas import EmailIn, Signal
+from app.schemas import (EmailIn, Signal)
 from app.config import settings
-from datetime import datetime, timezone
+from datetime import (datetime, timezone)
 from app.heuristics import registered_domain
 
 SAFE_BROWSING_URL = "https://safebrowsing.googleapis.com/v4/threatMatches:find"
