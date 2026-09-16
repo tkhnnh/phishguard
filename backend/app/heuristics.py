@@ -56,12 +56,14 @@ def check_domain_mismatch(email: EmailIn) -> list[Signal]:
     if not sender_domain or "." not in sender_domain:
         return []
     
-    
+    flagged = set() 
     for url in email.urls:
-        if registered_domain(url) != sender_domain:
+        link_domain = registered_domain(url)
+        if link_domain != sender_domain and link_domain not in flagged:
+            flagged.add(link_domain)
             signals.append(Signal(
                     code="domain_mismatch",
-                    message=f"Link domain '{registered_domain(url)}' differs from sender '{sender_domain}'",
+                    message=f"Link domain '{link_domain}' differs from sender '{sender_domain}'",
                     weight=35,
                     severity="high",))
     
@@ -69,10 +71,12 @@ def check_domain_mismatch(email: EmailIn) -> list[Signal]:
 
 def check_lookalike(email: EmailIn) -> list[Signal]:
     signals = []
+    flagged = set()
     for url in email.urls:
         domain = registered_domain(url)
         match = difflib.get_close_matches(domain, PROTECTED_BRANDS, n=1, cutoff=0.8)
-        if match and match[0] != domain:
+        if match and match[0] != domain and match[0] not in flagged:
+            flagged.add(match[0])
             signals.append(Signal(
                 code="lookalike",
                 message=f"Domain '{domain}' looks like '{match[0]}'",
@@ -81,7 +85,8 @@ def check_lookalike(email: EmailIn) -> list[Signal]:
             ))
         
         
-        if "xn--" in domain:
+        if "xn--" in domain and domain not in flagged:
+            flagged.add(domain)
             signals.append(Signal(
             code="homograph",
             message=f"Domain '{domain}' uses punycode (possible homograph attack)",
@@ -93,9 +98,14 @@ def check_lookalike(email: EmailIn) -> list[Signal]:
 
 def check_ip_url(email: EmailIn)-> list[Signal]:
     signals = []
+    flagged = set()
     for url in email.urls:
-        if IP_URL_PATTERN.search(url):
-            signals.append(Signal(code="ip_url", message=f"Link uses a raw IP address instead of a domain: {url}", weight=30, severity="high",))
+        match = IP_URL_PATTERN.search(url)
+        if match:
+            ip = match.group()
+            if ip not in flagged:
+                flagged.add(ip)
+                signals.append(Signal(code="ip_url", message=f"Link uses a raw IP address instead of a domain: {url}", weight=30, severity="high",))
     
     return signals
 
@@ -128,9 +138,11 @@ def shannon_entropy(text: str) -> float:
     
 def check_url_entropy(email: EmailIn) -> list[Signal]:
     signals = []
+    flagged = set()
     for url in email.urls:
         domain = registered_domain(url)
         entropy = shannon_entropy(domain)
-        if entropy > 3.5:
+        if entropy > 3.5 and domain not in flagged:
+            flagged.add(entropy)
             signals.append(Signal(code="high_entropy", message=f"Link domain '{domain}' looks random (entropy {entropy:.2f})", weight=15,severity="low",))    
     return signals
