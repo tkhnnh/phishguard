@@ -5,6 +5,7 @@ from app.heuristics import (check_urgency, check_domain_mismatch, check_lookalik
 from app.scoring import score_signal
 from app.reputation import (check_safe_browsing, check_domain_age, check_redirects)
 from app.feeds import (check_blocklist, load_feeds)
+from app.ml_url import check_ml_url
 from contextlib import asynccontextmanager
 import asyncio
 
@@ -22,7 +23,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-RULES = [check_urgency, check_domain_mismatch, check_lookalike, check_ip_url, check_reply_to, check_url_entropy, check_blocklist]
+RULES = [check_urgency, check_domain_mismatch, check_lookalike, check_ip_url, check_reply_to, check_url_entropy, check_blocklist, check_ml_url]
 
 @app.post("/analyze", response_model = AnalyzeResponse)
 async def analyze(payload: EmailIn):
