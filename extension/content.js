@@ -59,6 +59,19 @@ function onNavigationMaybeChanged() {
     return;
   }
 
+  if (!chrome.runtime?.id) return;
+
+  // Respect the on/off toggle from the popup before doing anything.
+  chrome.storage.local.get({ pg_enabled: true }, (cfg) => {
+    if (!cfg.pg_enabled) {
+      removeBanner();
+      return;
+    }
+    analyzeEmail(email);
+  });
+}
+
+function analyzeEmail(email) {
   // If the extension was reloaded while this old content script is still running
   // in the page, chrome.runtime is invalidated. Guard so we fail quietly instead
   // of throwing "Extension context invalidated" — a Gmail tab reload fixes it.
@@ -76,6 +89,7 @@ function onNavigationMaybeChanged() {
         console.log("[PhishGuard] Verdict:", response);
         if (response && !response.error) {
           showBanner(response);
+          recordResult(email, response);
         }
       }
     );
@@ -154,6 +168,42 @@ function confidenceLabel(score) {
   if (score >= 85 || score < 15) return "High confidence";
   if (score >= 70 || score < 30) return "Medium confidence";
   return "Low confidence";
+}
+
+// Update popup stats + last-email, and fire a desktop alert on dangerous mail.
+function recordResult(email, result) {
+  const verdict = result.verdict || "Unknown";
+  const isDangerous = verdict.toLowerCase() === "dangerous";
+
+  chrome.storage.local.get(
+    { pg_stats: { scanned: 0, flagged: 0 }, pg_notify: true },
+    (cfg) => {
+      const stats = cfg.pg_stats;
+      stats.scanned += 1;
+      if (isDangerous) stats.flagged += 1;
+      chrome.storage.local.set({
+        pg_stats: stats,
+        pg_last: {
+          verdict,
+          score: result.score ?? 0,
+          sender: email.sender,
+          time: Date.now(),
+        },
+      });
+
+      if (isDangerous && cfg.pg_notify && chrome.runtime?.id) {
+        try {
+          chrome.runtime.sendMessage({
+            type: "NOTIFY",
+            sender: email.sender,
+            score: result.score ?? 0,
+          });
+        } catch (e) {
+          /* stale context — ignore */
+        }
+      }
+    }
+  );
 }
 
 function escapeHtml(str) {

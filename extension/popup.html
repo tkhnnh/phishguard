@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <link rel="stylesheet" href="popup.css" />
+</head>
+<body>
+  <header class="pg-header">
+    <img src="icons/icon48.png" alt="" class="pg-logo" />
+    <div>
+      <div class="pg-title">PhishGuard</div>
+      <div class="pg-subtitle">Phishing protection for Gmail</div>
+    </div>
+  </header>
+
+  <!-- Protection toggle -->
+  <section class="pg-card pg-toggle-row">
+    <div>
+      <div class="pg-card-label">Protection</div>
+      <div id="pg-status-text" class="pg-status-text">On</div>
+    </div>
+    <label class="pg-switch">
+      <input type="checkbox" id="pg-toggle" checked />
+      <span class="pg-slider"></span>
+    </label>
+  </section>
+
+  <!-- Session stats -->
+  <section class="pg-stats">
+    <div class="pg-stat">
+      <div id="pg-scanned" class="pg-stat-num">0</div>
+      <div class="pg-stat-label">Scanned</div>
+    </div>
+    <div class="pg-stat">
+      <div id="pg-flagged" class="pg-stat-num pg-danger">0</div>
+      <div class="pg-stat-label">Flagged</div>
+    </div>
+  </section>
+
+  <!-- Last analyzed email -->
+  <section class="pg-card">
+    <div class="pg-card-label">Last email</div>
+    <div id="pg-last" class="pg-last pg-empty">No email analyzed yet</div>
+  </section>
+
+  <!-- Backend status -->
+  <section class="pg-card pg-toggle-row">
+    <div>
+      <div class="pg-card-label">Backend</div>
+      <div id="pg-backend" class="pg-status-text">Checking…</div>
+    </div>
+    <span id="pg-backend-dot" class="pg-dot pg-dot-unknown"></span>
+  </section>
+
+  <footer class="pg-footer">
+    <span>v0.1.0</span>
+    <label class="pg-notify">
+      <input type="checkbox" id="pg-notify-toggle" checked />
+      Desktop alerts
+    </label>
+  </footer>
+
+  <script src="popup.js"></script>
+</body>
+</html>

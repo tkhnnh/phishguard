@@ -27,4 +27,15 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     // before sendResponse runs and content.js never hears back.
     return true;
   }
+
+  // Desktop notification for a dangerous email.
+  if (message.type === "NOTIFY") {
+    chrome.notifications.create({
+      type: "basic",
+      iconUrl: "icons/icon128.png",
+      title: "⚠️ Dangerous email detected",
+      message: `From ${message.sender || "unknown sender"} — risk ${message.score}/100`,
+      priority: 2,
+    });
+  }
 });

@@ -8,7 +8,7 @@
     "48": "icons/icon48.png",
     "128": "icons/icon128.png"
   },
-  "permissions": ["activeTab"],
+  "permissions": ["activeTab", "storage", "notifications"],
   "host_permissions": [
     "https://phishguard-klvp.onrender.com/*",
     "http://localhost:8000/*"
@@ -25,6 +25,7 @@
   },
   "action": {
     "default_title": "PhishGuard",
+    "default_popup": "popup.html",
     "default_icon": {
       "16": "icons/icon16.png",
       "48": "icons/icon48.png",
