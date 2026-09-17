@@ -118,3 +118,15 @@ async def test_redirects_degrades_on_error():
         side_effect=httpx.ConnectError("boom")
     )
     assert await check_redirects(make_email(urls=["http://abnormal.com"])) == []
+
+
+@respx.mock
+async def test_redirects_silent_when_lands_on_sender():
+    # An email-tracking link (awstrack.me) that redirects back to the sender's
+    # own domain is benign — must NOT fire (real carsales.com.au false positive).
+    respx.head("http://awstrack.me/x").mock(
+        return_value=httpx.Response(301, headers={"Location": "http://carsales.com.au/welcome"})
+    )
+    respx.head("http://carsales.com.au/welcome").mock(return_value=httpx.Response(200))
+    email = make_email(sender="news@carsales.com.au", urls=["http://awstrack.me/x"])
+    assert await check_redirects(email) == []

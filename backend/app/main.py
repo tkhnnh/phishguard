@@ -6,6 +6,7 @@ from app.scoring import score_signal
 from app.reputation import (check_safe_browsing, check_domain_age, check_redirects)
 from app.feeds import (check_blocklist, load_feeds)
 from contextlib import asynccontextmanager
+import asyncio
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -29,7 +30,12 @@ async def analyze(payload: EmailIn):
     signals = []
     for rule in RULES: 
         signals += rule(payload)
-    signals += await check_safe_browsing(payload)
-    signals += await check_domain_age(payload)
-    signals += await check_redirects(payload)
+    # Run the three network-bound checks concurrently instead of one after
+    # another, so response time is the slowest one, not their sum.
+    sb, age, redirects = await asyncio.gather(
+        check_safe_browsing(payload),
+        check_domain_age(payload),
+        check_redirects(payload),
+    )
+    signals += sb + age + redirects
     return score_signal(signals)

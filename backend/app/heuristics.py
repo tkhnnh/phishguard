@@ -21,8 +21,8 @@ PROTECTED_BRANDS = [
 
 IP_URL_PATTERN = re.compile(r"https?://\d{1,3}(\.\d{1,3}){3}")
 
-# Email service providers / newsletter platforms: links legitimately point here
-# even when the sender is a different domain, so don't flag these as mismatches.
+# Email service providers / click-tracking platforms: links legitimately point
+# here even when the sender is a different domain, so don't flag as mismatches.
 KNOWN_ESP_DOMAINS = {
     "beehiiv.com",
     "beehiivstatus.com",
@@ -36,7 +36,38 @@ KNOWN_ESP_DOMAINS = {
     "hubspotlinks.com",
     "klaviyomail.com",
     "sparkpostmail.com",
+    "awstrack.me",         # Amazon SES click/open tracking
+    "amazonses.com",
+    "sendgrid.com",
+    "mailchimp.com",
+    "mailchimpapp.net",
+    "sfmc-content.com",    # Salesforce Marketing Cloud
+    "exct.net",            # Salesforce Marketing Cloud (ExactTarget)
+    "sparkpost.com",
+    "mandrillapp.com",
+    "customeriomail.com",
+    "brevo.com",           # (Sendinblue)
+    "sendinblue.com",
 }
+
+# Major legitimate destinations newsletters routinely link to. A mismatch
+# against these is not evidence of phishing on its own.
+TRUSTED_LINK_DOMAINS = {
+    "google.com",
+    "apple.com",
+    "microsoft.com",
+    "youtube.com",
+    "facebook.com",
+    "instagram.com",
+    "twitter.com",
+    "x.com",
+    "linkedin.com",
+    "apps.apple.com",
+    "play.google.com",
+}
+
+# Domains check_domain_mismatch should never flag as a mismatch.
+MISMATCH_ALLOWLIST = KNOWN_ESP_DOMAINS | TRUSTED_LINK_DOMAINS
 
 def check_urgency(email: EmailIn) -> list[Signal]:
     signals = []
@@ -75,7 +106,7 @@ def check_domain_mismatch(email: EmailIn) -> list[Signal]:
     flagged = set() 
     for url in email.urls:
         link_domain = registered_domain(url)
-        if link_domain in KNOWN_ESP_DOMAINS:
+        if link_domain in MISMATCH_ALLOWLIST:
             continue
         if link_domain != sender_domain and link_domain not in flagged:
             flagged.add(link_domain)

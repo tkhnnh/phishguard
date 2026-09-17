@@ -35,6 +35,11 @@ def test_domain_mismatch_on_clear_email():
 def test_domain_mismatch_skips_known_esp():
     email = make_email(sender="hi@withsandra.dev", urls = ["https://mail.beehiiv.com/x"])
     assert check_domain_mismatch(email) == []
+
+def test_domain_mismatch_skips_trusted_link_domain():
+    # Newsletters routinely link to google.com etc. — not a mismatch on its own.
+    email = make_email(sender="news@carsales.com.au", urls=["https://play.google.com/store"])
+    assert check_domain_mismatch(email) == []
     
     
 def test_lookalike_fires_on_wrong_domain():
