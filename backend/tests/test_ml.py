@@ -37,6 +37,17 @@ def test_ml_url_silent_on_reputable_domain():
     assert check_ml_url(make_email(urls=["https://www.google.com"])) == []
 
 
+def test_ml_url_silent_on_legit_url_with_path():
+    # Regression for the "path => phishing" artifact: a real article URL with a
+    # path must NOT be flagged.
+    assert check_ml_url(make_email(urls=["https://www.nytimes.com/2024/09/17/story-name"])) == []
+
+
+def test_ml_url_skips_allowlisted_tracking_domain():
+    # Email-platform tracking wrappers look random but are legit — skipped.
+    assert check_ml_url(make_email(urls=["https://mail.beehiiv.com/ss/c/u001.abc/xyz"])) == []
+
+
 def test_ml_url_fires_on_phishy_url():
     # A random-looking, hyphen/entropy-heavy credential URL should score high.
     url = "http://secure-account-verify-login-update.x7f9q2zk8bv1p.tk/confirm?id=99213"

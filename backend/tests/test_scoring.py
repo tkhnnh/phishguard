@@ -38,3 +38,19 @@ def test_cap_at_100():
 def test_signals_pass_through():
     result = score_signal([sig(4), sig(10)])
     assert len(result.signals) == 2
+
+def _sig(code, weight):
+    return Signal(code=code, message="x", weight=weight, severity="high")
+
+
+def test_correlated_signals_get_diminished():
+    # Two reputation signals: strongest full + half the other (50 + 0.5*40 = 70),
+    # not the naive sum of 90.
+    result = score_signal([_sig("safe_browsing", 50), _sig("ml_url", 40)])
+    assert result.score == 70
+
+
+def test_independent_groups_sum():
+    # Different evidence types reinforce: reputation 50 + content 20 = 70.
+    result = score_signal([_sig("safe_browsing", 50), _sig("urgency", 20)])
+    assert result.score == 70

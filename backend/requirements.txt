@@ -5,3 +5,5 @@ pydantic-settings==2.7.0
 tldextract==5.1.2
 httpx==0.28.1
 lightgbm==4.7.0
+scikit-learn==1.9.1
+joblib==1.6.0

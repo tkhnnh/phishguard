@@ -9,14 +9,16 @@ from pathlib import Path
 import lightgbm as lgb
 
 from app.schemas import EmailIn, Signal
-from app.heuristics import registered_domain
+from app.heuristics import registered_domain, MISMATCH_ALLOWLIST
 from app.ml_features import extract_features
 
 MODEL_PATH = Path(__file__).parent / "ml_model.txt"
 
-# Probability thresholds for turning a model score into a signal.
-_HIGH = 0.85
-_MEDIUM = 0.60
+# Probability thresholds for turning a model score into a signal. Kept high
+# because the model is still imperfect on real-world URLs; only fire when
+# confident, so it corroborates rather than dominates.
+_HIGH = 0.90
+_MEDIUM = 0.70
 _MAX_URLS = 15
 
 try:
@@ -40,6 +42,10 @@ def check_ml_url(email: EmailIn) -> list[Signal]:
     for url in email.urls[:_MAX_URLS]:
         domain = registered_domain(url)
         if domain in flagged:
+            continue
+        # Don't ML-score known email-platform / big-brand domains: their
+        # tracking wrappers look random and the model over-scores them.
+        if domain in MISMATCH_ALLOWLIST:
             continue
         prob = _predict(url)
         if prob < _MEDIUM:
